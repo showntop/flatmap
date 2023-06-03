@@ -1,3 +1,3 @@
-module github.com/krakendio/flatmap
+module github.com/showntop/flatmap
 
-go 1.17
+go 1.20

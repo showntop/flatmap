@@ -34,6 +34,13 @@ type Map struct {
 	re *regexp.Regexp
 }
 
+// Each traversal every key in map
+func (m *Map) Each(ev func(k string, v interface{})) {
+	for k, v := range m.m {
+		ev(k, v)
+	}
+}
+
 // Move makes changes in the flatten hierarchy moving contents from origin to newKey
 func (m *Map) Move(original, newKey string) {
 	if v, ok := m.m[original]; ok {
