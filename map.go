@@ -34,6 +34,11 @@ type Map struct {
 	re *regexp.Regexp
 }
 
+// Get get a key in map
+func (m *Map) Get(k string) interface{} {
+	return m.m[k]
+}
+
 // Each traversal every key in map
 func (m *Map) Each(ev func(k string, v interface{})) {
 	for k, v := range m.m {
