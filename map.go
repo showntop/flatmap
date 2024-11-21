@@ -1,6 +1,7 @@
 package flatmap
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -36,7 +37,40 @@ type Map struct {
 
 // Get get a key in map
 func (m *Map) Get(k string) interface{} {
-	return m.m[k]
+	v, ok := m.m[k]
+	if ok {
+		return v
+	}
+
+	// expr.result.#: slice
+	if c, ok := m.m[k+".#"]; ok {
+		return m.getSlice(k, c.(int))
+	}
+
+	sep := m.t.Separator()
+
+	// 遍历map TODO: 优化
+	merged := make(map[string]interface{})
+	for key := range m.m {
+		if !strings.HasPrefix(key, k) {
+			continue
+		}
+
+		if key[len(k):len(k)+1] != sep {
+			continue
+		}
+		merged[key] = m.m[key]
+	}
+	return merged
+}
+
+func (m *Map) getSlice(prefix string, length int) []interface{} {
+	// expr.result.0
+	merged := make([]interface{}, 0)
+	for i := 0; i < length; i++ {
+		merged = append(merged, m.m[fmt.Sprintf("%s.%d", prefix, i)])
+	}
+	return merged
 }
 
 // Each traversal every key in map
