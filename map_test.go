@@ -2,6 +2,7 @@ package flatmap
 
 import (
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -538,5 +539,65 @@ func TestMap_Expand(t *testing.T) {
 
 	if !reflect.DeepEqual(res, expectedRes) {
 		t.Errorf("unexpected result:\n%+v\n%+v", res, expectedRes)
+	}
+}
+
+func TestMap_Get(t *testing.T) {
+	type fields struct {
+		m  map[string]interface{}
+		t  Tokenizer
+		re *regexp.Regexp
+	}
+	type args struct {
+		k string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   interface{}
+	}{
+		// TODO: Add test cases.
+		{
+			name: "test1",
+			fields: fields{
+				m: map[string]interface{}{
+					"a.b.c.#":              3,
+					"a.b.c.0.title":        "t0",
+					"a.b.c.0.content":      "c0",
+					"a.b.c.0.users.#":      2,
+					"a.b.c.0.users.0.name": "西西",
+					"a.b.c.0.users.1.name": "东东",
+
+					"a.b.c.1.title":        "t1",
+					"a.b.c.1.content":      "c1",
+					"a.b.c.1.users.#":      2,
+					"a.b.c.1.users.0.name": "xx",
+					"a.b.c.1.users.1.name": "yy",
+
+					"a.b.c.2.title":        "t2",
+					"a.b.c.2.content":      "c2",
+					"a.b.c.2.users.#":      2,
+					"a.b.c.2.users.0.name": "cc",
+					"a.b.c.2.users.1.name": "dd",
+				},
+				t: DefaultTokenizer,
+				// re: has
+			},
+			args: args{k: "a.b.c.2.users.0.name"},
+			want: "cc",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Map{
+				m:  tt.fields.m,
+				t:  tt.fields.t,
+				re: tt.fields.re,
+			}
+			if got := m.Get(tt.args.k); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Map.Get() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

@@ -1,7 +1,6 @@
 package flatmap
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,6 +34,15 @@ type Map struct {
 	re *regexp.Regexp
 }
 
+func get(value map[string]interface{}, key string) interface{} {
+	return value[key]
+}
+
+func getSlice(value []interface{}, idx string) interface{} {
+	ii, _ := strconv.Atoi(idx)
+	return value[ii]
+}
+
 // Get get a key in map
 func (m *Map) Get(k string) interface{} {
 	v, ok := m.m[k]
@@ -42,35 +50,19 @@ func (m *Map) Get(k string) interface{} {
 		return v
 	}
 
-	// expr.result.#: slice
-	if c, ok := m.m[k+".#"]; ok {
-		return m.getSlice(k, c.(int))
-	}
-
-	sep := m.t.Separator()
-
-	// 遍历map TODO: 优化
-	merged := make(map[string]interface{})
-	for key := range m.m {
-		if !strings.HasPrefix(key, k) {
-			continue
+	parts := strings.Split(k, m.t.Separator())
+	var std any = m.Expand()
+	for i := 0; i < len(parts); i++ {
+		subID := parts[i]
+		if smap, ok := std.(map[string]interface{}); ok {
+			std = get(smap, subID)
+		} else if sslice, ok := std.([]interface{}); ok {
+			std = getSlice(sslice, subID)
+		} else {
+			return std
 		}
-
-		if key[len(k):len(k)+1] != sep {
-			continue
-		}
-		merged[key] = m.m[key]
 	}
-	return merged
-}
-
-func (m *Map) getSlice(prefix string, length int) []interface{} {
-	// expr.result.0
-	merged := make([]interface{}, 0)
-	for i := 0; i < length; i++ {
-		merged = append(merged, m.m[fmt.Sprintf("%s.%d", prefix, i)])
-	}
-	return merged
+	return std
 }
 
 // Each traversal every key in map
